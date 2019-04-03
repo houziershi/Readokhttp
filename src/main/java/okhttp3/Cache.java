@@ -165,7 +165,7 @@ public final class Cache implements Closeable, Flushable {
       Cache.this.trackResponse(cacheStrategy);
     }
   };
-
+  //缓存存储DiskLruCache
   final DiskLruCache cache;
 
   /* read and write statistics, all guarded by 'this' */

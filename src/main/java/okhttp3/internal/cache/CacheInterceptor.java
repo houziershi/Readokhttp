@@ -52,10 +52,10 @@ public final class CacheInterceptor implements Interceptor {
   @Override public Response intercept(Chain chain) throws IOException {
     Response cacheCandidate = cache != null
         ? cache.get(chain.request())
-        : null;
+        : null;  //获取网络缓存
 
     long now = System.currentTimeMillis();
-
+    //根据request、response生成不同的缓存策略
     CacheStrategy strategy = new CacheStrategy.Factory(now, chain.request(), cacheCandidate).get();
     Request networkRequest = strategy.networkRequest;
     Response cacheResponse = strategy.cacheResponse;
@@ -63,12 +63,12 @@ public final class CacheInterceptor implements Interceptor {
     if (cache != null) {
       cache.trackResponse(strategy);
     }
-
+    //如果存在缓存，但是缓存不可用，关掉它。
     if (cacheCandidate != null && cacheResponse == null) {
       closeQuietly(cacheCandidate.body()); // The cache candidate wasn't applicable. Close it.
     }
 
-    // If we're forbidden from using the network and the cache is insufficient, fail.
+    // If we're forbidden from using the network and the cache is insufficient, fail.如果缓存不能使用，同时又不请求网络，则返回504网关超时。
     if (networkRequest == null && cacheResponse == null) {
       return new Response.Builder()
           .request(chain.request())
@@ -81,13 +81,13 @@ public final class CacheInterceptor implements Interceptor {
           .build();
     }
 
-    // If we don't need the network, we're done.
+    // If we don't need the network, we're done.  如果不请求网络，则返回缓存。
     if (networkRequest == null) {
       return cacheResponse.newBuilder()
           .cacheResponse(stripBody(cacheResponse))
           .build();
     }
-
+    //如果网络请求
     Response networkResponse = null;
     try {
       networkResponse = chain.proceed(networkRequest);
@@ -100,7 +100,7 @@ public final class CacheInterceptor implements Interceptor {
 
     // If we have a cache response too, then we're doing a conditional get.
     if (cacheResponse != null) {
-      if (networkResponse.code() == HTTP_NOT_MODIFIED) {
+      if (networkResponse.code() == HTTP_NOT_MODIFIED) { //服务器返回304，body数据不会返回。客户端可以重用上次的response
         Response response = cacheResponse.newBuilder()
             .headers(combine(cacheResponse.headers(), networkResponse.headers()))
             .sentRequestAtMillis(networkResponse.sentRequestAtMillis())
@@ -128,7 +128,7 @@ public final class CacheInterceptor implements Interceptor {
     if (cache != null) {
       if (HttpHeaders.hasBody(response) && CacheStrategy.isCacheable(response, networkRequest)) {
         // Offer this request to the cache.
-        CacheRequest cacheRequest = cache.put(response);
+        CacheRequest cacheRequest = cache.put(response);//保存缓存
         return cacheWritingResponse(cacheRequest, response);
       }
 

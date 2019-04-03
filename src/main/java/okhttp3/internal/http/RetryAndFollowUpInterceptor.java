@@ -274,6 +274,8 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
     return true;
   }
 
+  /**Created by guokun on 2019/4/3.
+   * Description: RetryAndFollowUpInterceptor 重试机制的关键方法*/
   /**
    * Figures out the HTTP request to make in response to receiving {@code userResponse}. This will
    * either add authentication headers, follow redirects or handle a client request timeout. If a
@@ -296,7 +298,8 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
 
       case HTTP_UNAUTHORIZED:
         return client.authenticator().authenticate(route, userResponse);
-
+      /**Created by guokun on 2019/4/3.
+       * Description: 重定向的重试，获取新地址*/
       case HTTP_PERM_REDIRECT:
       case HTTP_TEMP_REDIRECT:
         // "If the 307 or 308 status code is received in response to a request other than GET
@@ -311,7 +314,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
       case HTTP_SEE_OTHER:
         // Does the client allow redirects?
         if (!client.followRedirects()) return null;
-
+        //获取新的Url地址
         String location = userResponse.header("Location");
         if (location == null) return null;
         HttpUrl url = userResponse.request().url().resolve(location);

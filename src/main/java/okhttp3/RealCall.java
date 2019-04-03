@@ -235,6 +235,10 @@ final class RealCall implements Call {
   }
 
   Response getResponseWithInterceptorChain() throws IOException {
+    /**Created by guokun on 2019/4/3.
+     * Description:
+     * 1. 拦截器的调用逻辑，RealInterceptorChain管理拦截器的调用
+     * */
     // Build a full stack of interceptors.
     List<Interceptor> interceptors = new ArrayList<>();
     interceptors.addAll(client.interceptors());
