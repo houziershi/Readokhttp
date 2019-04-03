@@ -109,7 +109,7 @@ public final class StreamAllocation {
     int writeTimeout = chain.writeTimeoutMillis();
     int pingIntervalMillis = client.pingIntervalMillis();
     boolean connectionRetryEnabled = client.retryOnConnectionFailure();
-
+    //建立连接
     try {
       RealConnection resultConnection = findHealthyConnection(connectTimeout, readTimeout,
           writeTimeout, pingIntervalMillis, connectionRetryEnabled, doExtensiveHealthChecks);

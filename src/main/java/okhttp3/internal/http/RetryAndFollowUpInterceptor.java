@@ -132,7 +132,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
           throw e.getFirstConnectException();
         }
         releaseConnection = false; //recover方法判断是否可以恢复，如果可以，不释放连接，继续请求。否则，继续请求
-        continue;
+        continue; //重新进行while循环，进行网络请求
       } catch (IOException e) {
         // An attempt to communicate with a server failed. The request may have been sent.
         boolean requestSendStarted = !(e instanceof ConnectionShutdownException);
@@ -141,7 +141,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
         continue;
       } finally {
         // We're throwing an unchecked exception. Release any resources.
-        if (releaseConnection) {
+        if (releaseConnection) { //releaseConnection=true时释放连接
           streamAllocation.streamFailed(null);
           streamAllocation.release();
         }
@@ -230,7 +230,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
     // This exception is fatal.
     if (!isRecoverable(e, requestSendStarted)) return false;
 
-    // No more routes to attempt.  guokun，问题
+    // No more routes to attempt. 检查是否有更多的route
     if (!streamAllocation.hasMoreRoutes()) return false;
 
     // For failure recovery, use the same route selector with a new connection.
@@ -244,7 +244,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
 
   private boolean isRecoverable(IOException e, boolean requestSendStarted) {
     // If there was a protocol problem, don't recover.
-    if (e instanceof ProtocolException) {
+    if (e instanceof ProtocolException) { //协议异常
       return false;
     }
 
@@ -256,14 +256,14 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
 
     // Look for known client-side or negotiation errors that are unlikely to be fixed by trying
     // again with a different route.
-    if (e instanceof SSLHandshakeException) {
+    if (e instanceof SSLHandshakeException) { //ssl握手异常
       // If the problem was a CertificateException from the X509TrustManager,
       // do not retry.
       if (e.getCause() instanceof CertificateException) {
         return false;
       }
     }
-    if (e instanceof SSLPeerUnverifiedException) {
+    if (e instanceof SSLPeerUnverifiedException) { //ssl证书校验异常
       // e.g. a certificate pinning error.
       return false;
     }
@@ -299,7 +299,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
       case HTTP_UNAUTHORIZED:
         return client.authenticator().authenticate(route, userResponse);
       /**Created by guokun on 2019/4/3.
-       * Description: 重定向的重试，获取新地址*/
+       * Description: 300,301,302,303几个重定向相关的状态码，重定向的重试，获取新地址*/
       case HTTP_PERM_REDIRECT:
       case HTTP_TEMP_REDIRECT:
         // "If the 307 or 308 status code is received in response to a request other than GET
