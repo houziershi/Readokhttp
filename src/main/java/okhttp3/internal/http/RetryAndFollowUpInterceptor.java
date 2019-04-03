@@ -131,7 +131,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
         if (!recover(e.getLastConnectException(), streamAllocation, false, request)) {
           throw e.getFirstConnectException();
         }
-        releaseConnection = false;
+        releaseConnection = false; //recover方法判断是否可以恢复，如果可以，不释放连接，继续请求。否则，继续请求
         continue;
       } catch (IOException e) {
         // An attempt to communicate with a server failed. The request may have been sent.
@@ -230,7 +230,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
     // This exception is fatal.
     if (!isRecoverable(e, requestSendStarted)) return false;
 
-    // No more routes to attempt.
+    // No more routes to attempt.  guokun，问题
     if (!streamAllocation.hasMoreRoutes()) return false;
 
     // For failure recovery, use the same route selector with a new connection.

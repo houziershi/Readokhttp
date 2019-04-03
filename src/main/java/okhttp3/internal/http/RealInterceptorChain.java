@@ -139,7 +139,7 @@ public final class RealInterceptorChain implements Interceptor.Chain {
           + " must call proceed() exactly once");
     }
 
-    // Call the next interceptor in the chain.
+    // Call the next interceptor in the chain. 关键代码，递归调用按顺序调用下一个拦截器
     RealInterceptorChain next = new RealInterceptorChain(interceptors, streamAllocation, httpCodec,
         connection, index + 1, request, call, eventListener, connectTimeout, readTimeout,
         writeTimeout);
