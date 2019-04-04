@@ -452,7 +452,7 @@ public final class RealConnection extends Http2Connection.Listener implements Co
 
   /**
    * Returns true if this connection can carry a stream allocation to {@code address}. If non-null
-   * {@code route} is the resolved route for a connection.
+   * {@code route} is the resolved route for a connection. 中文：合格的connection
    */
   public boolean isEligible(Address address, @Nullable Route route) {
     // If this connection is not accepting new streams, we're done.
@@ -546,10 +546,10 @@ public final class RealConnection extends Http2Connection.Listener implements Co
   /** Returns true if this connection is ready to host new streams. */
   public boolean isHealthy(boolean doExtensiveChecks) {
     if (socket.isClosed() || socket.isInputShutdown() || socket.isOutputShutdown()) {
-      return false;
+      return false; //1. socket是否关闭
     }
 
-    if (http2Connection != null) {
+    if (http2Connection != null) {//2.是否是HTTP2协议
       return !http2Connection.isShutdown();
     }
 

@@ -109,7 +109,7 @@ public final class StreamAllocation {
     int writeTimeout = chain.writeTimeoutMillis();
     int pingIntervalMillis = client.pingIntervalMillis();
     boolean connectionRetryEnabled = client.retryOnConnectionFailure();
-    //建立连接
+    //建立连接：找到一条健康的connection。healthy？
     try {
       RealConnection resultConnection = findHealthyConnection(connectTimeout, readTimeout,
           writeTimeout, pingIntervalMillis, connectionRetryEnabled, doExtensiveHealthChecks);
@@ -131,21 +131,21 @@ public final class StreamAllocation {
   private RealConnection findHealthyConnection(int connectTimeout, int readTimeout,
       int writeTimeout, int pingIntervalMillis, boolean connectionRetryEnabled,
       boolean doExtensiveHealthChecks) throws IOException {
-    while (true) {
+    while (true) { //1. 找到一条connection
       RealConnection candidate = findConnection(connectTimeout, readTimeout, writeTimeout,
           pingIntervalMillis, connectionRetryEnabled);
 
       // If this is a brand new connection, we can skip the extensive health checks.
       synchronized (connectionPool) {
-        if (candidate.successCount == 0) {
+        if (candidate.successCount == 0) {  //successCount = 0意味着它candidate没有StreamAllocation
           return candidate;
         }
       }
 
       // Do a (potentially slow) check to confirm that the pooled connection is still good. If it
       // isn't, take it out of the pool and start again.
-      if (!candidate.isHealthy(doExtensiveHealthChecks)) {
-        noNewStreams();
+      if (!candidate.isHealthy(doExtensiveHealthChecks)) { //确认candidate是否是good，如果不是移除它，继续跳到while循环，重新find一条
+        noNewStreams(); //移除streamallocation，关闭socket
         continue;
       }
 
@@ -155,7 +155,7 @@ public final class StreamAllocation {
 
   /**
    * Returns a connection to host a new stream. This prefers the existing connection if it exists,
-   * then the pool, finally building a new connection.
+   * then the pool, finally building a new connection. 找到一个connection，要不已存在，要么重新建立一条
    */
   private RealConnection findConnection(int connectTimeout, int readTimeout, int writeTimeout,
       int pingIntervalMillis, boolean connectionRetryEnabled) throws IOException {
@@ -219,7 +219,7 @@ public final class StreamAllocation {
 
       if (newRouteSelection) {
         // Now that we have a set of IP addresses, make another attempt at getting a connection from
-        // the pool. This could match due to connection coalescing.
+        // the pool. This could match due to connection coalescing.中文：目前已有ip addresses的集合，尝试从连接池中获取一条连接。
         List<Route> routes = routeSelection.getAll();
         for (int i = 0, size = routes.size(); i < size; i++) {
           Route route = routes.get(i);
@@ -365,7 +365,7 @@ public final class StreamAllocation {
     Connection releasedConnection;
     synchronized (connectionPool) {
       releasedConnection = connection;
-      socket = deallocate(true, false, false);
+      socket = deallocate(true, false, false); //禁止新的streams,移除旧的streams
       if (connection != null) releasedConnection = null;
     }
     closeQuietly(socket);
@@ -377,7 +377,7 @@ public final class StreamAllocation {
   /**
    * Releases resources held by this allocation. If sufficient resources are allocated, the
    * connection will be detached or closed. Callers must be synchronized on the connection pool.
-   *
+   * 中文：释放这条allocation的资源，
    * <p>Returns a closeable that the caller should pass to {@link Util#closeQuietly} upon completion
    * of the synchronized block. (We don't do I/O while synchronized on the connection pool.)
    */
@@ -396,7 +396,7 @@ public final class StreamAllocation {
         connection.noNewStreams = true;
       }
       if (this.codec == null && (this.released || connection.noNewStreams)) {
-        release(connection);
+        release(connection); //释放连接，即移除connection中streamAllocation
         if (connection.allocations.isEmpty()) {
           connection.idleAtNanos = System.nanoTime();
           if (Internal.instance.connectionBecameIdle(connectionPool, connection)) {
