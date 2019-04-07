@@ -1,6 +1,7 @@
 ### 源码阅读知识点
 -  拦截器的设计模式--责任链模式
-   *  RealCall类中的getResponseWithInterceptorChain方法和RealInterceptorChain管理拦截器的调用，调用顺序？；
+   *  RealCall类中的getResponseWithInterceptorChain方法和RealInterceptorChain管理拦截器的调用，调用顺序?
+   ```RealInterceptorChain逐个调用Interceptor中的intercept方法```
    *  应用拦截器和网络拦截器的区别？
    
 -  RetryAndFollowUpInterceptor--请求失败重试请求和重定向
